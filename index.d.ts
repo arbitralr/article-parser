@@ -87,7 +87,8 @@ export interface ArticleData {
   title?: string;
   description?: string;
   image?: string;
-  author?: string;
+  author?: any[];
+  publisher?: any;
   content?: string;
   source?: string;
   published?: string;

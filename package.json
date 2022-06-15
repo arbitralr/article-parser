@@ -1,5 +1,5 @@
 {
-  "version": "6.0.5",
+  "version": "6.0.6",
   "name": "@arbitral/article-parser",
   "description": "To extract main article from given URL",
   "homepage": "https://ndaidong.github.io/article-parser-demo/",

@@ -27,7 +27,7 @@ export default (html, baseUrl) => {
       ? context.length ? context : [context]
       : context['@graph']).map(({ name, image, url }) => ({
       name: name || '',
-      image: image || '',
+      image: image?.url ?? '',
       url: url || ''
     }))
   }
