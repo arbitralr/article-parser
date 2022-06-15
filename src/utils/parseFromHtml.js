@@ -13,6 +13,7 @@ import getHostname from './getHostname.js'
 import findRulesByUrl from './findRulesByUrl.js'
 import cleanAndMinifyHtml from './cleanAndMinifyHtml.js'
 import extractMetaData from './extractMetaData.js'
+import extractJsonLd from './extractJsonLd.js'
 import extractWithReadability, {
   extractTitleWithReadability
 } from './extractWithReadability.js'
@@ -127,6 +128,13 @@ export default async (inputHtml, inputUrl = '') => {
 
   const image = metaImg ? absolutifyUrl(bestUrl, metaImg) : ''
 
+  const { publisher, ...jsonLData } = extractJsonLd(html, inputUrl)
+  let authors = jsonLData.author
+  if (!authors.length && author) {
+    const trimStr = (str) => str.trimStart().trimEnd()
+    authors = author.split(/,|and|& /).filter((a) => !!trimStr(a)).map((a) => ({ name: trimStr(a) }))
+  }
+
   return {
     url: bestUrl,
     title,
@@ -134,8 +142,9 @@ export default async (inputHtml, inputUrl = '') => {
     links,
     image,
     content: normalizedContent,
-    author,
+    author: authors,
     source: source || getHostname(bestUrl),
+    publisher,
     published,
     ttr: getTimeToRead(textContent)
   }

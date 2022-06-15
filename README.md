@@ -88,7 +88,8 @@ If the extraction works well, you should get an `article` object with the struct
   "title": String,
   "description": String,
   "image": URI String,
-  "author": String,
+  "author": Person[], // https://schema.org/Person
+  "publisher": Organization,  // https://schema.org/Organization
   "content": HTML String,
   "published": Date String,
   "source": String, // original publisher
