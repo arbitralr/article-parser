@@ -1,7 +1,7 @@
 // eval.js
 // to quickly test with a single url or file
 
-const { extract } = require('./dist/cjs/article-parser.js')
+const { extract } = require('./dist/cjs/arbitral-article-parser.js')
 
 const extractFromUrl = async (url) => {
   try {

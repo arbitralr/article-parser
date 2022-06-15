@@ -23,13 +23,13 @@ export default (html, baseUrl) => {
       return []
     }
 
-    return !context['@graph']
+    return (!context['@graph']
       ? context.length ? context : [context]
-      : context['@graph'].map(({ name, image, url }) => ({
-        name: name || '',
-        image: image || '',
-        url: url || ''
-      }))
+      : context['@graph']).map(({ name, image, url }) => ({
+      name: name || '',
+      image: image || '',
+      url: url || ''
+    }))
   }
 
   const buildPublisher = ({ name, url, logo, sameAs, ...context }) => {

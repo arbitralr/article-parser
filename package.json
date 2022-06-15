@@ -1,6 +1,6 @@
 {
-  "version": "6.0.1",
-  "name": "article-parser",
+  "version": "6.0.5",
+  "name": "@arbitral/article-parser",
   "description": "To extract main article from given URL",
   "homepage": "https://ndaidong.github.io/article-parser-demo/",
   "repository": {
@@ -8,11 +8,11 @@
     "url": "git@github.com:ndaidong/article-parser.git"
   },
   "author": "@ndaidong",
-  "main": "./dist/cjs/article-parser.js",
+  "main": "./dist/cjs/arbitral-article-parser.js",
   "module": "./src/main.js",
   "browser": {
     "linkedom": "./src/browser/linkedom.js",
-    "./main.js": "./dist/article-parser.browser.js"
+    "./main.js": "./dist/arbitral-article-parser.browser.js"
   },
   "type": "module",
   "types": "./index.d.ts",

@@ -8,6 +8,8 @@ import { readFileSync, writeFileSync, rmSync, mkdirSync } from 'fs'
 import { buildSync } from 'esbuild'
 
 const pkg = JSON.parse(readFileSync('./package.json', { encoding: 'utf-8' }))
+const pkgName = pkg.name
+const pkgNameFlattened = pkgName.replace('/', '-').replace(/[^a-zA-Z-]/g, '')
 
 rmSync('dist', {
   force: true,
@@ -17,14 +19,14 @@ mkdirSync('dist')
 
 const buildTime = (new Date()).toISOString()
 const comment = [
-  `// ${pkg.name}@${pkg.version}, by ${pkg.author}`,
-  `built with esbuild at ${buildTime}`,
-  `published under ${pkg.license} license`
+   `// ${pkgNameFlattened}@${pkg.version}, by ${pkg.author}`,
+   `built with esbuild at ${buildTime}`,
+   `published under ${pkg.license} license`
 ].join(' - ')
 
 /**
- * @type {import('esbuild').BuildOptions}
- * */
+  * @type {import('esbuild').BuildOptions}
+  * */
 const baseOpt = {
   entryPoints: ['src/main.js'],
   bundle: true,
@@ -37,14 +39,14 @@ const baseOpt = {
 }
 
 /**
- * @type {import('esbuild').BuildOptions}
- */
+  * @type {import('esbuild').BuildOptions}
+  */
 const cjsVersion = {
   ...baseOpt,
   platform: 'node',
   format: 'cjs',
   mainFields: ['main'],
-  outfile: `dist/cjs/${pkg.name}.js`,
+  outfile: `dist/cjs/${pkgNameFlattened}.js`,
   banner: {
     js: comment
   }
@@ -52,9 +54,9 @@ const cjsVersion = {
 buildSync(cjsVersion)
 
 const cjspkg = {
-  name: pkg.name + '-cjs',
+  name: pkgName + '-cjs',
   version: pkg.version,
-  main: `./${pkg.name}.js`
+  main: `./${pkgNameFlattened}.js`
 }
 writeFileSync(
   'dist/cjs/package.json',
@@ -63,13 +65,13 @@ writeFileSync(
 )
 
 /**
- * @type {import('esbuild').BuildOptions}
- */
+  * @type {import('esbuild').BuildOptions}
+  */
 const browserVersion = {
   ...baseOpt,
   platform: 'browser',
   format: 'esm',
-  outfile: `dist/${pkg.name}.browser.js`,
+  outfile: `dist/${pkgNameFlattened}.browser.js`,
   banner: {
     js: comment
   }
