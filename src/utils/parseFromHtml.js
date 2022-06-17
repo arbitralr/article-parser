@@ -128,11 +128,20 @@ export default async (inputHtml, inputUrl = '') => {
 
   const image = metaImg ? absolutifyUrl(bestUrl, metaImg) : ''
 
-  const { publisher, ...jsonLData } = extractJsonLd(html, inputUrl)
+  let { publisher, ...jsonLData } = extractJsonLd(html, inputUrl)
   let authors = jsonLData.author
   if (!authors.length && author) {
     const trimStr = (str) => str.trimStart().trimEnd()
     authors = author.split(/,|and|& /).filter((a) => !!trimStr(a)).map((a) => ({ name: trimStr(a) }))
+  }
+
+  const hostName = getHostname(bestUrl)
+
+  if (!publisher) {
+    publisher = {
+      name: source || hostName,
+      url: hostName
+    }
   }
 
   return {
@@ -143,7 +152,7 @@ export default async (inputHtml, inputUrl = '') => {
     image,
     content: normalizedContent,
     author: authors,
-    source: source || getHostname(bestUrl),
+    source: source || hostName,
     publisher,
     published,
     ttr: getTimeToRead(textContent)
