@@ -1,5 +1,6 @@
 // retrieve.test
-/* eslint-env jest */
+import { describe, it } from 'node:test'
+import assert from 'node:assert'
 
 import nock from 'nock'
 
@@ -9,39 +10,59 @@ const parseUrl = (url) => {
   const re = new URL(url)
   return {
     baseUrl: `${re.protocol}//${re.host}`,
-    path: re.pathname
+    path: re.pathname,
   }
 }
 
-test('test retrieve from good source', async () => {
-  const url = 'https://some.where/good/page'
-  const { baseUrl, path } = parseUrl(url)
-  const scope = nock(baseUrl)
-  scope.get(path).reply(200, '<div>this is content</div>', {
-    'Content-Type': 'text/html'
+describe('test retrieve() method', () => {
+  it('test retrieve with bad status code', async () => {
+    const url = 'https://some.where/bad/page'
+    const { baseUrl, path } = parseUrl(url)
+    nock(baseUrl).get(path).reply(500, 'Error 500')
+    assert.rejects(retrieve(url), new Error('Request failed with error code 500'))
   })
-  const result = await retrieve(url)
-  expect(result).toBe('<div>this is content</div>')
-})
 
-test('test retrieve with unsupported content type', async () => {
-  const url = 'https://some.where/bad/page'
-  const { baseUrl, path } = parseUrl(url)
-  const scope = nock(baseUrl)
-  scope.get(path).reply(200, '', {
-    'Content-Type': 'something/strange'
+  it('test retrieve from good source', async () => {
+    const url = 'https://some.where/good/page'
+    const { baseUrl, path } = parseUrl(url)
+    nock(baseUrl).get(path).reply(200, '<div>this is content</div>', {
+      'Content-Type': 'text/html',
+    })
+    const buffer = await retrieve(url)
+    const html = Buffer.from(buffer).toString()
+    assert.equal(html, '<div>this is content</div>')
   })
-  const result = await retrieve(url)
-  expect(result).toBe(null)
-})
 
-test('test retrieve from bad source', async () => {
-  const url = 'https://some.where/bad/page'
-  const { baseUrl, path } = parseUrl(url)
-  const scope = nock(baseUrl)
-  scope.get(path).reply(500, '<div>this is content</div>', {
-    'Content-Type': 'text/html'
+  it('test retrieve from good source with \\r\\n', async () => {
+    const url = 'https://some.where/good/page'
+    const { baseUrl, path } = parseUrl(url)
+    nock(baseUrl).get(path).reply(200, '\n\r\r\n\n<div>this is content</div>\n\r\r\n\n', {
+      'Content-Type': 'text/html',
+    })
+    const buffer = await retrieve(url)
+    const html = Buffer.from(buffer).toString().trim()
+    assert.equal(html, '<div>this is content</div>')
   })
-  const result = await retrieve(url)
-  expect(result).toBe(null)
+
+  it('test retrieve using proxy', async () => {
+    const url = 'https://some.where/good/source-with-proxy'
+    const { baseUrl, path } = parseUrl(url)
+    nock(baseUrl).get(path).reply(200, 'something bad', {
+      'Content-Type': 'bad/thing',
+    })
+    nock('https://proxy-server.com')
+      .get('/api/proxy?url=https%3A%2F%2Fsome.where%2Fgood%2Fsource-with-proxy')
+      .reply(200, '<div>this is content</div>', {
+        'Content-Type': 'text/html',
+      })
+
+    const buffer = await retrieve(url, {
+      proxy: {
+        target: 'https://proxy-server.com/api/proxy?url=',
+      },
+    })
+    const html = Buffer.from(buffer).toString()
+    assert.equal(html, '<div>this is content</div>')
+    nock.cleanAll()
+  })
 })

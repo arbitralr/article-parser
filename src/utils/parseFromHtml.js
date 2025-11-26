@@ -1,48 +1,38 @@
 // utils -> parseFromHtml
 
-import { stripTags, truncate, unique } from 'bellajs'
+import { stripTags, truncate, unique, pipe } from '@ndaidong/bellajs'
 
-import sanitize from 'sanitize-html'
+import { purify, cleanify } from './html.js'
 
-import isValidUrl from './isValidUrl.js'
-import purifyUrl from './purifyUrl.js'
-import absolutifyUrl from './absolutifyUrl.js'
-import chooseBestUrl from './chooseBestUrl.js'
-import getHostname from './getHostname.js'
+import {
+  isValid as isValidUrl,
+  purify as purifyUrl,
+  absolutify as absolutifyUrl,
+  normalize as normalizeUrls,
+  chooseBestUrl,
+  getDomain
+} from './linker.js'
 
-import findRulesByUrl from './findRulesByUrl.js'
-import cleanAndMinifyHtml from './cleanAndMinifyHtml.js'
 import extractMetaData from './extractMetaData.js'
-import extractJsonLd from './extractJsonLd.js'
+
 import extractWithReadability, {
   extractTitleWithReadability
 } from './extractWithReadability.js'
-import extractWithSelector from './extractWithSelector.js'
+
+import { execPreParser, execPostParser } from './transformation.js'
+
 import getTimeToRead from './getTimeToRead.js'
-import normalizeUrls from './normalizeUrls.js'
-import stripUnwantedTags from './stripUnwantedTags.js'
-import transformHtml from './transformHtml.js'
 
-import logger from './logger.js'
-
-import { getParserOptions } from '../config.js'
-
-const cleanify = html => {
-  return sanitize(html, {
-    allowedTags: false,
-    allowedAttributes: false
-  })
+const summarize = (desc, txt, threshold, maxlen) => { // eslint-disable-line
+  return desc.length > threshold
+    ? desc
+    : truncate(txt, maxlen).replace(/\n/g, ' ')
 }
 
-const summarize = (desc, txt, threshold, maxlen) => {
-  return desc.length < threshold
-    ? truncate(txt, maxlen).replace(/\n/g, ' ')
-    : desc
-}
+export default async (inputHtml, inputUrl = '', parserOptions = {}) => {
+  const pureHtml = purify(inputHtml)
+  const meta = extractMetaData(pureHtml)
 
-export default async (inputHtml, inputUrl = '') => {
-  const html = cleanify(inputHtml)
-  const meta = extractMetaData(html)
   let title = meta.title
 
   const {
@@ -53,23 +43,23 @@ export default async (inputHtml, inputUrl = '') => {
     description: metaDesc,
     image: metaImg,
     author,
-    source,
-    published
+    published,
+    favicon: metaFav,
+    type,
   } = meta
 
   const {
-    descriptionLengthThreshold,
-    descriptionTruncateLen,
-    contentLengthThreshold
-  } = getParserOptions()
+    wordsPerMinute = 300,
+    descriptionTruncateLen = 210,
+    descriptionLengthThreshold = 180,
+    contentLengthThreshold = 200,
+  } = parserOptions
 
   // gather title
   if (!title) {
-    logger.info('Could not detect article title from meta!')
-    title = extractTitleWithReadability(html, inputUrl)
+    title = extractTitleWithReadability(pureHtml, inputUrl)
   }
   if (!title) {
-    logger.info('Could not detect article title!')
     return null
   }
 
@@ -81,41 +71,38 @@ export default async (inputHtml, inputUrl = '') => {
   )
 
   if (!links.length) {
-    logger.info('Could not detect article link!')
     return null
   }
 
-  // choose the best url
+  // choose the best url, which one looks like title the most
   const bestUrl = chooseBestUrl(links, title)
 
-  // get defined selector
-  const {
-    selector = null,
-    unwanted = [],
-    transform = null
-  } = findRulesByUrl(links)
+  const fns = pipe(
+    (input) => {
+      return normalizeUrls(input, bestUrl)
+    },
+    (input) => {
+      return execPreParser(input, links)
+    },
+    (input) => {
+      return extractWithReadability(input, bestUrl)
+    },
+    (input) => {
+      return input ? execPostParser(input, links) : null
+    },
+    (input) => {
+      return input ? cleanify(input) : null
+    }
+  )
 
-  // find article content
-  const mainContentSelected = extractWithSelector(html, selector)
-
-  const mainContent = stripUnwantedTags(mainContentSelected ?? html, unwanted)
-
-  const mainContentAbsoluteUrls = normalizeUrls(mainContent, bestUrl)
-
-  const transformedContent = transformHtml(mainContentAbsoluteUrls, transform)
-
-  const content = extractWithReadability(transformedContent, bestUrl)
+  const content = fns(inputHtml)
 
   if (!content) {
-    logger.info('Could not detect article content!')
     return null
   }
 
-  const normalizedContent = cleanAndMinifyHtml(content)
-
-  const textContent = stripTags(normalizedContent)
+  const textContent = stripTags(content)
   if (textContent.length < contentLengthThreshold) {
-    logger.info('Main article is too short!')
     return null
   }
 
@@ -127,22 +114,7 @@ export default async (inputHtml, inputUrl = '') => {
   )
 
   const image = metaImg ? absolutifyUrl(bestUrl, metaImg) : ''
-
-  let { publisher, ...jsonLData } = extractJsonLd(html, inputUrl)
-  let authors = jsonLData.author
-  if (!authors.length && author) {
-    const trimStr = (str) => str.trimStart().trimEnd()
-    authors = author.split(/,|and|& /).filter((a) => !!trimStr(a)).map((a) => ({ name: trimStr(a) }))
-  }
-
-  const hostName = getHostname(bestUrl)
-
-  if (!publisher) {
-    publisher = {
-      name: source || hostName,
-      url: hostName
-    }
-  }
+  const favicon = metaFav ? absolutifyUrl(bestUrl, metaFav) : ''
 
   return {
     url: bestUrl,
@@ -150,11 +122,12 @@ export default async (inputHtml, inputUrl = '') => {
     description,
     links,
     image,
-    content: normalizedContent,
-    author: authors,
-    source: source || hostName,
-    publisher,
+    content,
+    author,
+    favicon,
+    source: getDomain(bestUrl),
     published,
-    ttr: getTimeToRead(textContent)
+    ttr: getTimeToRead(textContent, wordsPerMinute),
+    type,
   }
 }

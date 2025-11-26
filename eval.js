@@ -1,14 +1,27 @@
 // eval.js
 
-import { readFileSync, existsSync } from 'fs'
+import { execSync } from 'node:child_process'
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 
-import isValidUrl from './src/utils/isValidUrl.js'
-import { extract } from './src/main.js'
+import { slugify } from '@ndaidong/bellajs'
+
+import { isValid as isValidUrl } from './src/utils/linker.js'
+import { extract, extractFromHtml } from './src/main.js'
+
+if (!existsSync('evaluation')) {
+  execSync('mkdir evaluation')
+}
 
 const extractFromUrl = async (url) => {
   try {
+    console.time('extraction')
     const art = await extract(url)
     console.log(art)
+    if (art) {
+      const slug = slugify(art.title)
+      writeFileSync(`evaluation/${slug}.html`, art.content, 'utf8')
+    }
+    console.timeEnd('extraction')
   } catch (err) {
     console.trace(err)
   }
@@ -17,8 +30,12 @@ const extractFromUrl = async (url) => {
 const extractFromFile = async (fpath) => {
   try {
     const html = readFileSync(fpath, 'utf8')
-    const art = await extract(html)
+    const art = await extractFromHtml(html)
     console.log(art)
+    if (art) {
+      const slug = slugify(art.title)
+      writeFileSync(`evaluation/${slug}.html`, art.content, 'utf8')
+    }
   } catch (err) {
     console.trace(err)
   }
