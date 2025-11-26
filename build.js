@@ -13,7 +13,7 @@ const pkgNameFlattened = pkgName.replace('/', '-').replace(/[^a-zA-Z-]/g, '')
 
 rmSync('dist', {
   force: true,
-  recursive: true
+  recursive: true,
 })
 mkdirSync('dist')
 
@@ -21,7 +21,7 @@ const buildTime = (new Date()).toISOString()
 const comment = [
    `// ${pkgNameFlattened}@${pkg.version}, by ${pkg.author}`,
    `built with esbuild at ${buildTime}`,
-   `published under ${pkg.license} license`
+   `published under ${pkg.license} license`,
 ].join(' - ')
 
 /**
@@ -35,7 +35,7 @@ const baseOpt = {
   minify: true,
   write: true,
   sourcemap: 'external',
-  external: ['canvas']
+  external: ['canvas'],
 }
 
 /**
@@ -48,15 +48,15 @@ const cjsVersion = {
   mainFields: ['main'],
   outfile: `dist/cjs/${pkgNameFlattened}.js`,
   banner: {
-    js: comment
-  }
+    js: comment,
+  },
 }
 buildSync(cjsVersion)
 
 const cjspkg = {
   name: pkgName + '-cjs',
   version: pkg.version,
-  main: `./${pkgNameFlattened}.js`
+  main: `./${pkgNameFlattened}.js`,
 }
 writeFileSync(
   'dist/cjs/package.json',
@@ -73,7 +73,7 @@ const browserVersion = {
   format: 'esm',
   outfile: `dist/${pkgNameFlattened}.browser.js`,
   banner: {
-    js: comment
-  }
+    js: comment,
+  },
 }
 buildSync(browserVersion)

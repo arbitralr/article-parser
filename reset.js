@@ -1,29 +1,26 @@
-/**
- * reset.js
- * @ndaidong
-**/
+// reset.js
 
 import {
   existsSync,
   unlinkSync
-} from 'fs'
+} from 'node:fs'
 
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
 
 const dirs = [
-  'dist',
+  'evaluation',
   'docs',
   '.nyc_output',
   'coverage',
   'node_modules',
-  '.nuxt'
+  '.nuxt',
 ]
 
 const files = [
   'yarn.lock',
   'pnpm-lock.yaml',
   'package-lock.json',
-  'coverage.lcov'
+  'coverage.lcov',
 ]
 
 dirs.forEach((d) => {

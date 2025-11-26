@@ -13,48 +13,48 @@ export const rules = [
     unwanted: [
       '.morenews',
       '.zone--media',
-      '.zone--timeline'
-    ]
+      '.zone--timeline',
+    ],
   },
   {
     patterns: ['*://zingnews.vn/*'],
     unwanted: [
       '.the-article-category',
       '.the-article-meta',
-      '.the-article-tags'
-    ]
+      '.the-article-tags',
+    ],
   },
   {
     patterns: ['*://{*.}?vnexpress.net/*'],
     unwanted: [
-      '.header-content'
-    ]
+      '.header-content',
+    ],
   },
   {
     patterns: ['*://{*.}?vietnamnet.vn/*', '*://{*.}?vnn.vn/*'],
     selector: '#ArticleContent',
     unwanted: [
       '.inner-article',
-      '.article-relate'
-    ]
+      '.article-relate',
+    ],
   },
   {
     patterns: ['*://thehill.com/*'],
     unwanted: [
-      '.rollover-people-block'
-    ]
+      '.rollover-people-block',
+    ],
   },
   {
     patterns: ['*://{*.}?digitaltrends.com/*'],
     unwanted: [
       '.h-editors-recs-title',
-      'ul.h-editors-recs'
-    ]
+      'ul.h-editors-recs',
+    ],
   },
   {
     patterns: ['*://{*.}?techradar.com/*'],
     unwanted: [
-      'nav.breadcrumb'
-    ]
-  }
+      'nav.breadcrumb',
+    ],
+  },
 ]

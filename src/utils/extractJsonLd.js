@@ -9,13 +9,13 @@ import getHostname from './getHostname.js'
  */
 export default (html, baseUrl) => {
   const articleAttrs = [
-    'NewsArticle'
+    'NewsArticle',
   ]
 
   const organizationAttrs = [
     'Organization',
     'NewsMediaOrganization',
-    'WebSite'
+    'WebSite',
   ]
 
   const buildAuthor = (context) => {
@@ -28,16 +28,16 @@ export default (html, baseUrl) => {
       : context['@graph']).map(({ name, image, url }) => ({
       name: name || '',
       image: image?.url ?? '',
-      url: url || ''
+      url: url || '',
     }))
   }
 
-  const buildPublisher = ({ name, url, logo, sameAs, ...context }) => {
+  const buildPublisher = ({ name, url, logo, sameAs }) => {
     return {
       name: name ?? '',
       url: url ?? getHostname(baseUrl),
       logo: logo?.url ?? '',
-      sameAs: sameAs ?? []
+      sameAs: sameAs ?? [],
     }
   }
 
@@ -55,11 +55,10 @@ export default (html, baseUrl) => {
   if (!jsonData.length) {
     return {
       author: [],
-      publisher: null
+      publisher: null,
     }
   }
 
-  // eslint-disable-next-line
   const jsonObj = jsonData.reduce((o, i) => (o[i['@type']] = i, o), {})
   const articleAttr = articleAttrs.filter(a => !!jsonObj[a])[0]
   const article = jsonObj[articleAttr] ?? {}
@@ -69,6 +68,6 @@ export default (html, baseUrl) => {
 
   return {
     author: buildAuthor(article.author),
-    publisher: buildPublisher({ ...organization, ...article.publisher })
+    publisher: buildPublisher({ ...organization, ...article.publisher }),
   }
 }
