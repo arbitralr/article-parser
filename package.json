@@ -21,6 +21,9 @@
   "engines": {
     "node": ">= 20"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
