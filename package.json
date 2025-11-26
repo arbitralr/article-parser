@@ -1,13 +1,13 @@
 {
   "version": "8.0.20",
-  "name": "@extractus/article-extractor",
-  "description": "To extract main article from given URL",
-  "homepage": "https://github.com/extractus/article-extractor",
+  "name": "@arbitral/article-parser",
+  "description": "Extract main article, image and meta data from URL",
+  "homepage": "https://github.com/arbitralr/article-parser",
   "repository": {
     "type": "git",
-    "url": "git@github.com:extractus/article-extractor.git"
+    "url": "https://github.com/arbitralr/article-parser.git"
   },
-  "author": "@extractus",
+  "author": "@arbitral",
   "main": "./src/main.js",
   "type": "module",
   "imports": {
