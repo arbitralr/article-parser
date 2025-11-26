@@ -23,6 +23,6 @@ export default (candidates = [], title = '') => {
     return better ? { similarity, value: curr } : prev
   }, {
     similarity: comparer.similarity(shortestUrl, titleHashed),
-    value: shortestUrl
+    value: shortestUrl,
   }).value
 }
