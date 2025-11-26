@@ -1,36 +1,36 @@
-/**
- * Article parser
- * @ndaidong
- **/
+// main.js
 
 import {
   isString
-} from 'bellajs'
-
-import isValidUrl from './utils/isValidUrl.js'
-import isHTMLString from './utils/isHTMLString.js'
+} from '@ndaidong/bellajs'
 
 import retrieve from './utils/retrieve.js'
-
 import parseFromHtml from './utils/parseFromHtml.js'
+import { getCharset } from './utils/html.js'
+import { isValid as isValidUrl } from './utils/linker.js'
 
-export const extract = async (input) => {
+export const extract = async (input, parserOptions = {}, fetchOptions = {}) => {
   if (!isString(input)) {
     throw new Error('Input must be a string')
   }
-  if (isHTMLString(input)) {
-    return parseFromHtml(input)
-  }
 
   if (!isValidUrl(input)) {
-    throw new Error('Input must be a valid URL')
+    return parseFromHtml(input, null, parserOptions || {})
   }
-  const html = await retrieve(input)
-  if (!html) {
+  const buffer = await retrieve(input, fetchOptions)
+  const text = buffer ? Buffer.from(buffer).toString().trim() : ''
+  if (!text) {
     return null
   }
-
-  return parseFromHtml(html, input)
+  const charset = getCharset(text)
+  const decoder = new TextDecoder(charset)
+  const html = decoder.decode(buffer)
+  return parseFromHtml(html, input, parserOptions || {})
 }
 
-export * from './config.js'
+export const extractFromHtml = async (html, url, parserOptions = {}) => {
+  return parseFromHtml(html, url, parserOptions)
+}
+
+export { addTransformations, removeTransformations } from './utils/transformation.js'
+export { setSanitizeHtmlOptions, getSanitizeHtmlOptions } from './config.js'

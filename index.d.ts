@@ -1,84 +1,73 @@
 // Type definitions
 
-import {AxiosRequestConfig} from "axios";
-import {IOptions as SanitizeOptions} from "sanitize-html";
-import {defaults} from "html-crush";
-import {URLPatternInit} from "urlpattern-polyfill";
+import { IOptions as SanitizeOptions } from "sanitize-html";
 
-type HtmlCrushOptions = Partial<typeof defaults>
-
-/**
- * @example
- * {
- *   patterns: [
- *     '*://example.com/books/:id', {
- *       hostname: 'example.com',
- *       pathname: '/books/:id',
- *     }
- *   ],
- *   selector: '.article-body',
- *   unwanted: ['.removing-box']
- * }
- */
-export interface QueryRule {
-  patterns: Array<URLPatternInit | string>,
-  unwanted?: Array<String>,
-  selector?: String,
-  transform?: (document: Document) => Document
+export interface Transformation {
+  patterns: Array<RegExp>,
+  pre?: (document: Document) => Document
+  post?: (document: Document) => Document
 }
+
+export function addTransformations(transformations: Array<Transformation>): Number;
+export function removeTransformations(options: Array<RegExp>): Number;
+
+export function getSanitizeHtmlOptions(): SanitizeOptions;
+export function setSanitizeHtmlOptions(options: SanitizeOptions): void;
 
 /**
  * @param input url or html
  */
-export function extract(input: string): Promise<ArticleData>;
-
-export function setParserOptions(options: ParserOptions): void;
-
-export function setRequestOptions(options: AxiosRequestConfig): void;
-
-export function setSanitizeHtmlOptions(options: SanitizeOptions): void;
-
-export function setHtmlCrushOptions(options: HtmlCrushOptions): void;
-
-export function addQueryRules(...rules: Array<QueryRule>): Number;
-
-export function getQueryRules(): Array<QueryRule>;
-
-export function setQueryRules(rules: Array<QueryRule>): void;
-
-export function getParserOptions(): ParserOptions;
-
-export function getRequestOptions(): AxiosRequestConfig;
-
-export function getSanitizeHtmlOptions(): SanitizeOptions;
-
-export function getHtmlCrushOptions(): HtmlCrushOptions;
 
 export interface ParserOptions {
   /**
-   * For estimating "time to read".
+   * to estimate time to read.
    * Default: 300
    */
-  wordsPerMinute: number
+  wordsPerMinute?: number
   /**
-   * To find the best url from list
+   * max num of chars generated for description
+   * Default: 210
    */
-  urlsCompareAlgorithm: 'levenshtein' | 'cosine' | 'diceCoefficient' | 'jaccardIndex' | 'lcs' | 'mlcs'
+  descriptionTruncateLen?: number
   /**
-   * Min num of chars required for description
-   * Default: 40
+   * min num of chars required for description
+   * Default: 180
    */
-  descriptionLengthThreshold: number
+  descriptionLengthThreshold?: number
   /**
-   * Max num of chars generated for description
-   * Default: 156
-   */
-  descriptionTruncateLen: number
-  /**
-   * Min num of chars required for content
+   * min num of chars required for content
    * Default: 200
    */
-  contentLengthThreshold: number
+  contentLengthThreshold?: number
+}
+
+export interface ProxyConfig {
+  target?: string;
+  headers?: Record<string, string>;
+}
+
+export interface FetchOptions {
+  /**
+   * list of request headers
+   * default: null
+   */
+  headers?: Record<string, string>;
+  /**
+   * the values to configure proxy
+   * default: null
+   */
+  proxy?: ProxyConfig;
+
+  /**
+   * http proxy agent
+   * default: null
+   */
+  agent?: object;
+  /**
+   * signal to terminate request
+   * default: null
+   */
+  signal?: object;
 }
 
 export interface ArticleData {
@@ -87,10 +76,15 @@ export interface ArticleData {
   title?: string;
   description?: string;
   image?: string;
-  author?: any[];
-  publisher?: any;
+  favicon?: string;
+  author?: string;
   content?: string;
   source?: string;
   published?: string;
   ttr?: number;
+  type?: string;
 }
+
+export function extract(input: string, parserOptions?: ParserOptions, fetchOptions?: FetchOptions): Promise<ArticleData|null>;
+
+export function extractFromHtml(html: string, url?: string, parserOptions?: ParserOptions): Promise<ArticleData|null>;

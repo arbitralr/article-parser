@@ -1,24 +1,36 @@
 // utils -> retrieve
 
-import axios from 'axios'
+import fetch from 'cross-fetch'
 
-import logger from './logger.js'
+const profetch = async (url, options = {}) => {
+  const { proxy = {}, signal = null } = options
+  const {
+    target,
+    headers = {},
+  } = proxy
+  const res = await fetch(target + encodeURIComponent(url), {
+    headers,
+    signal,
+  })
+  return res
+}
 
-import { getRequestOptions } from '../config.js'
+export default async (url, options = {}) => {
+  const {
+    headers = {
+      'user-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0',
+    },
+    proxy = null,
+    agent = null,
+    signal = null,
+  } = options
 
-export default async (url) => {
-  try {
-    const res = await axios.get(url, getRequestOptions())
+  const res = proxy ? await profetch(url, { proxy, signal }) : await fetch(url, { headers, agent, signal })
 
-    const contentType = res.headers['content-type'] || ''
-    if (!contentType || !contentType.includes('text/html')) {
-      logger.error(`Content type must be "text/html", not "${contentType}"`)
-      return null
-    }
-
-    return res.data
-  } catch (err) {
-    logger.error(err.message || err)
-    return null
+  const status = res.status
+  if (status >= 400) {
+    throw new Error(`Request failed with error code ${status}`)
   }
+  const buffer = await res.arrayBuffer()
+  return buffer
 }
